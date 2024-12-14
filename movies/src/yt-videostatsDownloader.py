@@ -13,7 +13,7 @@ import logging
 MOVIECLIPS_CHANNEL_ID = "UC3gNmTGu-TTbFPpfSs5kNkg"
 MOVIECLIPS_TRAILERS_ID = "UCi8e0iOVk1fEOogdfu4YgfA"
 
-DEVELOPER_KEY = 'AIzaSyDL9Su1eLY5r2x9aLiVZsz0oObksZ-3ry0'
+DEVELOPER_KEY = ''
 YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/'
 VIDEO_API = 'videos?part=snippet,statistics&key={}&id={}'
 SEARCH_API = 'search?part=snippet,id&order=date&maxResults=100&key={}&channelId={}'
