@@ -1,4 +1,4 @@
-# Movie Scenes and Trailer Analyzer (MovieSTAr Dataset)
+# Movie Scenes,Trailer and Script Analyzer (MovieSTAr Dataset)
 
 ## Dataset Creation 
 
@@ -26,7 +26,16 @@ youtube-dl -i --output "YTID_%(id)s.%(ext)s" -a <file.txt> -f 'bestvideo[ext=mp4
 ```
 for i in `ls *.webm`; do x=`echo $i|sed 's/\.webm/\.mp4/g'`; ffmpeg -y -i $i -crf 5 -strict -2 $x; done
 ```
+### Scripts
+```shell
+# Download movie scripts
 
+# Canonicalize html to text 
+for i in $(find ../data/movie-scripts/ -name \*.htm); do 
+	x=$(echo $i|sed 's/\.htm/\.txt/g');
+	python3 html2text.py $i>$x;
+done
+```
 ### Getting YouTube video title 
 ```
 for i in `ls stats/*.json`; do 
