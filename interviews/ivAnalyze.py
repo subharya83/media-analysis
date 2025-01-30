@@ -89,13 +89,16 @@ def visualize_output(video_path, diarization, expressions, output_video_path):
         frame_count += 1
         timestamp = frame_count / fps
 
+        active_speaker = None
         for segment, _, speaker in diarization.itertracks(yield_label=True):
             if segment.start <= timestamp <= segment.end:
+                active_speaker = speaker
                 cv2.putText(frame, f"Speaker: {speaker}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        for ts, emotion in expressions:
-            if abs(ts - timestamp) < 0.1:
-                cv2.putText(frame, f"Emotion: {emotion}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        if active_speaker:
+            for ts, emotion in expressions:
+                if abs(ts - timestamp) < 0.1:
+                    cv2.putText(frame, f"Emotion: {emotion}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         out.write(frame)
     cap.release()
