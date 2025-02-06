@@ -5,63 +5,66 @@ import pandas as pd
 import imdb
 import logging
 
-
 class IMDBMetaData:
     def __init__(self):
-        self.conn = imdb.IMDb();
+        self.conn = imdb.IMDb()
 
-    def getIMDB_info(self, _path=None):
-        if os.path.exists(_path):
-            df = pd.read_csv(_path, sep="\t")
-            # Assuming last column is the YouTube video Title
-            ttl = df.iloc[:, -1]
-            # Getting a list of years
-            _years = [y.group(0) if y is not None else None for y in (re.search('\([1-9]\d\d\d\)', t) for t in ttl)]
-            _years = [int(y.replace('(', '').replace(')', '')) if y is not None else None for y in _years]
-            # Getting a list of movie titles
-            _titles = [t for t in df['MovieTitle']]
+    def _extract_year_from_title(self, title):
+        """Extract the year from the movie title using regex."""
+        year_match = re.search('\([1-9]\d\d\d\)', title)
+        return int(year_match.group(0).replace('(', '').replace(')', '')) if year_match else None
 
-            # Use this to create a query
-            _idx = 0
-            for _title in _titles:
-                _year = _years[_idx]
-                if _year:
-                    _query = _title + ' (' + str(_year) + ')'
-                else:
-                    _query = _title
-                m = self.conn.search_movie(_query)
-                if len(m) > 0:
-                    #logging.info(_year, _title, m[0].movieID)
-                    print(_year, _title, m[0].movieID)
-                else:
-                    #logging.info(_year, _title, 'IMDB_INFO_NA')
-                    print(_year, _title, 'IMDB_INFO_NA')
-                _idx += 1
+    def _build_query(self, title, year):
+        """Build a query string for IMDb search."""
+        return f"{title} ({year})" if year else title
 
-    def getIMDB_info_title_year(self, _title=None, _year=None):
-        if not _title:
-            return _year, _title, 'IMDB_INFO_NA'
-        if _year:
-            _query = _title + ' (' + str(_year) + ')'
-        else:
-            _query = _title
-        m = self.conn.search_movie(_query)
-        if len(m) > 0:
-            #logging.info(_year, _title, m[0].movieID)
-            return _year, _title, m[0].movieID
-        else:
-            #logging.info(_year, _title, 'IMDB_INFO_NA')
-            return _year, _title, 'IMDB_INFO_NA'
+    def _search_movie(self, query):
+        """Search for a movie on IMDb using the given query."""
+        return self.conn.search_movie(query)
 
+    def get_imdb_info_from_file(self, file_path):
+        """Get IMDb information for movies listed in a file."""
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The file {file_path} does not exist.")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(add_help=False, description='Download IMDB info given title and year')
-    #parser.add_argument('--mpath', '-m', type=str, required=True, help='Path to metadata index file')
-    parser.add_argument('--title', '-t', type=str, required=True, help='Movie Title')
-    parser.add_argument('--year', '-y', type=str, required=True, help='Movie Year')
+        df = pd.read_csv(file_path, sep="\t")
+        titles = df['MovieTitle']
+        years = [self._extract_year_from_title(title) for title in df.iloc[:, -1]]
+
+        results = []
+        for title, year in zip(titles, years):
+            query = self._build_query(title, year)
+            movies = self._search_movie(query)
+            movie_id = movies[0].movieID if movies else 'IMDB_INFO_NA'
+            results.append((year, title, movie_id))
+            print(year, title, movie_id)
+
+        return results
+
+    def get_imdb_info_by_title_year(self, title, year=None):
+        """Get IMDb information for a specific movie title and year."""
+        query = self._build_query(title, year)
+        movies = self._search_movie(query)
+        movie_id = movies[0].movieID if movies else 'IMDB_INFO_NA'
+        return year, title, movie_id
+
+def main():
+    parser = argparse.ArgumentParser(description='Download IMDb info given title and year')
+    parser.add_argument('--file', '-f', type=str, help='Path to metadata index file')
+    parser.add_argument('--title', '-t', type=str, help='Movie Title')
+    parser.add_argument('--year', '-y', type=str, help='Movie Year')
 
     args = parser.parse_args()
 
     db = IMDBMetaData()
-    #db.getIMDB_info(args.mpath)
-    db.getIMDB_info_title_year(_title=args.title, _year=args.year)
+
+    if args.file:
+        db.get_imdb_info_from_file(args.file)
+    elif args.title:
+        result = db.get_imdb_info_by_title_year(args.title, args.year)
+        print(result)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
