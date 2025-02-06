@@ -106,9 +106,9 @@ def visualize_output(video_path, diarization, expressions, output_video_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Analyze a YouTube video and generate an SSML file with time-coded speech segments, speaker labels, and facial expressions.")
-    parser.add_argument('-i', '--input', required=True, help="Input YouTube video URL or local video file path.")
-    parser.add_argument('-o', '--output', required=True, help="Output SSML file path.")
-    parser.add_argument('-v', '--visualize', help="Output video file path for visualization.")
+    parser.add_argument('-i', required=True, help="Input YouTube video URL or local video file path.")
+    parser.add_argument('-o', required=True, help="Output SSML file path.")
+    parser.add_argument('-v', help="Output video file path for visualization.")
     args = parser.parse_args()
 
     input_path = args.input
