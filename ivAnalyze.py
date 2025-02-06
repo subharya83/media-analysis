@@ -1,11 +1,11 @@
 import argparse
 import os
 import moviepy.editor as mp
-import speech_recognition as sr
 from pyannote.audio import Pipeline
 from deepface import DeepFace
 import cv2
 from datetime import timedelta
+import whisper  # Open-source speech recognition library
 
 # Ensure weights directory exists
 os.makedirs("weights", exist_ok=True)
@@ -21,18 +21,12 @@ def extract_audio_from_video(video_path, output_audio_path):
     video.audio.write_audiofile(output_audio_path)
 
 def transcribe_audio(audio_path):
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(audio_path) as source:
-        audio = recognizer.record(source)
-    try:
-        transcription = recognizer.recognize_google(audio, show_all=True)
-        return transcription['alternative'][0]['transcript'], transcription['alternative'][0]['confidence']
-    except sr.UnknownValueError:
-        print("Google Speech Recognition could not understand audio")
-        return None, None
-    except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {e}")
-        return None, None
+    # Load the Whisper model (downloads weights locally if not already present)
+    model = whisper.load_model("base")  # You can use "small", "medium", or "large" for better accuracy
+    result = model.transcribe(audio_path)
+    transcription = result["text"]
+    confidence = 1.0  # Whisper does not provide confidence scores, so we assume high confidence
+    return transcription, confidence
 
 def diarize_speakers(audio_path):
     pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=True)
