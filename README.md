@@ -98,3 +98,36 @@ This will print the movie's year, title, and IMDb ID (or `IMDB_INFO_NA` if not f
    - Use the IMDb metadata to enrich the YouTube video data (e.g., match movie titles to YouTube video titles).
 
 ---
+
+# Interview Analysis Tool (`ivAnalyze.py`)
+
+This Python script analyzes video content by extracting audio, transcribing speech, identifying speakers, and analyzing 
+facial expressions. It generates an SSML (Speech Synthesis Markup Language) file with time-coded speech segments, 
+speaker labels, and emotions, and optionally creates a visualization video.
+
+---
+
+## Features
+
+- **Audio Extraction**: Extracts audio from YouTube videos or local video files.
+- **Speech Transcription**: Transcribes audio using the open-source Whisper model (works offline).
+- **Speaker Diarization**: Identifies different speakers in the audio using `pyannote.audio`.
+- **Facial Expression Analysis**: Detects emotions in video frames using `DeepFace`.
+- **SSML Generation**: Creates an SSML file with time-coded speech, speaker labels, and emotions.
+- **Visualization**: Generates a video with overlaid speaker and emotion information.
+
+---
+
+## Requirements
+
+### Python Libraries:
+- `moviepy`
+- `whisper` (OpenAI's open-source speech recognition)
+- `pyannote.audio`
+- `deepface`
+- `opencv-python`
+- `pytube`
+
+Install the required libraries using:
+```bash
+pip install moviepy whisper pyannote.audio deepface opencv-python pytube
