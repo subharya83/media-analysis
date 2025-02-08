@@ -1,11 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
-
 
 class FacialEmotionFIP:
     def __init__(self):
@@ -24,7 +20,6 @@ class FacialEmotionFIP:
         bounding_boxes, points = self.imgProcessing.detect_faces(frame)
         points = points.T
         _df = list()
-        # If no face is detected
         for bbox, p in zip(bounding_boxes, points):
             box = bbox.astype(np.uint16)
             x1, y1, x2, y2 = box[0:4]
@@ -42,9 +37,7 @@ class FacialEmotionFIP:
             _df.append(_b+','+_s)
         return _df
 
-
 class FacialImageProcessing:
-    # minsize: minimum of faces' size
     def __init__(self, print_stat=False, minsize=32):
         self.print_stat = print_stat
         self.minsize = minsize
@@ -96,7 +89,6 @@ class FacialImageProcessing:
         
     @staticmethod
     def bbreg(boundingbox,reg):
-        # calibrate bounding boxes
         if reg.shape[1]==1:
             reg = np.reshape(reg, (reg.shape[2], reg.shape[3]))
 
@@ -111,7 +103,6 @@ class FacialImageProcessing:
      
     @staticmethod
     def generateBoundingBox(imap, reg, scale, t):
-        # use heatmap to generate bounding boxes
         stride=2
         cellsize=12
 
@@ -136,7 +127,6 @@ class FacialImageProcessing:
         boundingbox = np.hstack([q1, q2, np.expand_dims(score,1), reg])
         return boundingbox, reg
      
-    # function pick = nms(boxes,threshold,type)
     @staticmethod
     def nms(boxes, threshold, method):
         if boxes.size==0:
@@ -170,10 +160,8 @@ class FacialImageProcessing:
         pick = pick[0:counter]
         return pick
 
-    # function [dy edy dx edx y ey x ex tmpw tmph] = pad(total_boxes,w,h)
     @staticmethod
     def pad(total_boxes, w, h):
-        # compute the padding coordinates (pad the bounding boxes to square)
         tmpw = (total_boxes[:,2]-total_boxes[:,0]+1).astype(np.int32)
         tmph = (total_boxes[:,3]-total_boxes[:,1]+1).astype(np.int32)
         numbox = total_boxes.shape[0]
@@ -206,10 +194,8 @@ class FacialImageProcessing:
         
         return dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph
 
-    # function [bboxA] = rerec(bboxA)
     @staticmethod
     def rerec(bboxA):
-        # convert bboxA to square
         h = bboxA[:,3]-bboxA[:,1]
         w = bboxA[:,2]-bboxA[:,0]
         l = np.maximum(w, h)
@@ -219,11 +205,8 @@ class FacialImageProcessing:
         return bboxA
 
     def detect_faces(self,img):
-        # im: input image
-        # threshold: threshold=[th1 th2 th3], th1-3 are three steps's threshold
-        threshold = [ 0.6, 0.7, 0.9 ]  # three steps's threshold
-        # fastresize: resize img from last scale (using in high-resolution images) if fastresize==true
-        factor = 0.709 # scale factor
+        threshold = [ 0.6, 0.7, 0.9 ]
+        factor = 0.709
         factor_count=0
         total_boxes=np.empty((0,9))
         points=np.array([])
@@ -232,7 +215,6 @@ class FacialImageProcessing:
         minl=np.amin([h, w])
         m=12.0/self.minsize
         minl=minl*m
-        # create scale pyramid
         scales=[]
         while minl>=12:
             scales += [m*np.power(factor, factor_count)]
@@ -253,7 +235,6 @@ class FacialImageProcessing:
             
             boxes, _ = FacialImageProcessing.generateBoundingBox(out1[0,:,:,1].copy(), out0[0,:,:,:].copy(), scale, threshold[0])
             
-            # inter-scale nms
             pick = FacialImageProcessing.nms(boxes.copy(), 0.5, 'Union')
             if boxes.size>0 and pick.size>0:
                 boxes = boxes[pick,:]
@@ -277,7 +258,6 @@ class FacialImageProcessing:
         numbox = total_boxes.shape[0]
 
         if numbox > 0:
-            # second stage
             tempimg = np.zeros((24,24,3,numbox))
             for k in range(0, numbox):
                 tmp = np.zeros((int(tmph[k]),int(tmpw[k]),3))
@@ -304,7 +284,6 @@ class FacialImageProcessing:
         numbox = total_boxes.shape[0]
 
         if numbox > 0:
-            # third stage
             total_boxes = np.fix(total_boxes).astype(np.int32)
             dy, edy, dx, edx, y, ey, x, ex, tmpw, tmph = FacialImageProcessing.pad(total_boxes.copy(), w, h)
             tempimg = np.zeros((48,48,3,numbox))
